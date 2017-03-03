@@ -13,6 +13,14 @@ git subtree pull --prefix src/main/resources/annoy annoy master --squash
 ```
 (Then compile and push to origin if builds.)
 
+## Fetch new version of faiss
+```
+git remote add -f faiss https://github.com/facebookresearch/faiss.git
+git fetch faiss master
+git subtree pull --prefix src/main/resources/faiss faiss master --squash
+```
+(Then compile and push to origin if builds.)
+
 ## TODO
 * Add usage instructions
 * Once tested in prod, move to spotify/annoy-java
