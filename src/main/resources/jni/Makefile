@@ -16,16 +16,18 @@ endif
 JAVAH     :=$(JAVA_HOME)/bin/javah
 
 
-CC        :=g++
-CFLAGS    :=-I. -I../annoy/src -lc -shared
+CC        :=g++ -std=c++11
+CFLAGS    :=-I. -I../annoy/src -I.. -lc -shared
 FASTFLAGS :=-O3 -march=native -ffast-math -fPIC
 SOBJ      :=libannoy.jnilib
-SOURCE    :=com_spotify_annoy_AnnoyIndexImpl.cpp
+SOURCE    :=com_spotify_annoy_AnnoyIndexImpl.cpp com_spotify_annoy_FaissImpl.cpp
 HEADER    :=com_spotify_annoy_AnnoyIndexImpl.h
+HEADER2   :=com_spotify_annoy_FaissImpl.h
 
 all: annoy
 
 annoy:
 	$(JAVAH) -cp ../ -o ./$(HEADER) -jni com.spotify.annoy.AnnoyIndexImpl
+	$(JAVAH) -cp ../ -o ./$(HEADER2) -jni com.spotify.annoy.FaissImpl
 	$(CC) $(CFLAGS) $(JNIFLAGS) $(FASTFLAGS) -o $(SOBJ) $(SOURCE)
 
