@@ -4,27 +4,52 @@
 #include <annoylib.h>
 #include <kissrandom.h>
 
+class Container2 {
+    private:
+	vector<jint> _buf;
+	size_t _p;
+	size_t _i;
+    public:
+    Container2(): _p(0), _i(0) { }
+    void reserve(size_t p) {
+	_buf.reserve(_p = p);
+    }
+    inline void push_back(jint e) {
+	_buf[_i++] = e;
+    }
+    jintArray get(JNIEnv *env) {
+	jintArray outJNIArray = env->NewIntArray(_p);  // allocate
+	if (NULL == outJNIArray) return NULL;
+	env->SetIntArrayRegion(outJNIArray, 0 , _p, &_buf[0]);  // copy
+	return outJNIArray;
+    }
+
+};
+
 class Container {
     private:
 	JNIEnv *_env;
-	jintArray arr;
-	int i;
+	jintArray _arr;
+	jint *_elem;
     public:
-    Container(JNIEnv *env) : _env(env), i(0) {}
-    void reserve(size_t p) {
-	arr = _env->NewIntArray(p);  // allocate
+    Container(JNIEnv *env) : _env(env) {
     }
-    void push_back(jint e) {
-	_env->SetIntArrayRegion(arr, i++ , 1, &e);
+    void reserve(size_t p) {
+	_arr = _env->NewIntArray(p);  // allocate
+	_elem = _env->GetIntArrayElements(_arr, 0);
+    }
+    inline void push_back(jint e) {
+	(*_elem) = e;
+	_elem++;
     }
     jintArray get() {
-	return arr;
+	return _arr;
     }
 };
 
 namespace
 {
-    static AnnoyIndex<jint, jfloat, Angular, Kiss64Random, Container>* annoy_index;
+    static AnnoyIndex<jint, jfloat, Angular, Kiss64Random, Container2>* annoy_index;
 
     inline jintArray vec_to_jintArray(JNIEnv *env, const vector<jint> &vec)
     {
@@ -43,7 +68,7 @@ namespace
     JNIEXPORT void JNICALL Java_com_spotify_annoy_AnnoyIndexImpl_cppCtor
 (JNIEnv *env, jobject obj, jint jni_int)
 {
-    annoy_index = new AnnoyIndex<jint, jfloat, Angular, Kiss64Random, Container>(jni_int);
+    annoy_index = new AnnoyIndex<jint, jfloat, Angular, Kiss64Random, Container2>(jni_int);
 }
 
 /*
@@ -81,9 +106,9 @@ JNIEXPORT void JNICALL Java_com_spotify_annoy_AnnoyIndexImpl_cppSetSeed
     jfloat *inCArray = env->GetFloatArrayElements(arr, NULL);
     if (NULL == inCArray) return NULL;
     size_t search_k = (size_t)-1;
-    Container result(env);
+    Container2 result;
     annoy_index->get_nns_by_vector(inCArray, n, search_k, &result, NULL);
-    return result.get();
+    return result.get(env);
 }
 
 /*
@@ -96,9 +121,9 @@ JNIEXPORT void JNICALL Java_com_spotify_annoy_AnnoyIndexImpl_cppSetSeed
 {
     jfloat *inCArray = env->GetFloatArrayElements(arr, NULL);
     if (NULL == inCArray) return NULL;
-    Container result(env);
+    Container2 result;
     annoy_index->get_nns_by_vector(inCArray, n, search_k, &result, NULL);
-    return result.get();
+    return result.get(env);
 }
 
 
@@ -111,9 +136,9 @@ JNIEXPORT void JNICALL Java_com_spotify_annoy_AnnoyIndexImpl_cppSetSeed
 (JNIEnv *env, jobject obj, jint item, jint n)
 {
     size_t search_k = (size_t)-1;
-    Container result(env);
+    Container2 result;
     annoy_index->get_nns_by_item(item, n, search_k, &result, NULL);
-    return result.get();
+    return result.get(env);
 }
 
 /*
@@ -124,9 +149,9 @@ JNIEXPORT void JNICALL Java_com_spotify_annoy_AnnoyIndexImpl_cppSetSeed
     JNIEXPORT jintArray JNICALL Java_com_spotify_annoy_AnnoyIndexImpl_cppGetNearestByItemK
 (JNIEnv *env, jobject obj, jint item, jint n, jint search_k)
 {
-    Container result(env);
+    Container2 result;
     annoy_index->get_nns_by_item(item, n, search_k, &result, NULL);
-    return result.get();
+    return result.get(env);
 }
 
 /*
