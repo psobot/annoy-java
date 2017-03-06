@@ -32,7 +32,7 @@ if p.returncode != 0:
 
 # Tree generation
 dim = 40
-n_vecs = 500000
+n_vecs = 5000000
 n_trees = 10
 
 print ">>> Building annoy tree..."
@@ -47,7 +47,7 @@ t.save(tree_file)
 
 # Queries generation
 print ">>> Generating queries..."
-n_queries = 50000
+n_queries = 5000
 query_file = '%s/%d_queries.txt' % (benchmark_dir, n_queries)
 queries = random.sample(range(n_vecs), n_queries)
 with open(query_file, 'w') as f:
@@ -56,7 +56,7 @@ with open(query_file, 'w') as f:
 
 # Java perf test
 print ">>> Running Java benchmark..."
-nns_count = 200
+nns_count = 1000
 cmd = ('mvn exec:java -q' +
        ' -Dexec.mainClass="com.spotify.annoy.Benchmark"' +
        ' -Djava.library.path="%s/target/classes/jni"' % wd +
